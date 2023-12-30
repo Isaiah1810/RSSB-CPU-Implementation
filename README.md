@@ -8,3 +8,14 @@ Note: Work in progress. Currently works with simulation (using VCS and custom me
 
 
 Command used for simulation is vcs -sverilog library.sv memory.sv U_RISC.sv
+
+
+Format assembly file as such:
+    
+    .ORG f    ; .ORG sets current address to value(not an actual operation)
+hi  RSSB 5    ; Label
+    RSSB 6    ;
+    RSSB hi   ; Label again
+
+
+Note, this code doesn't really do anything
