@@ -50,7 +50,7 @@ class RSSB:
             except:
                 raise ValueError("Invalid Operand")
 
-ass = RSSB()
+a = RSSB()
 fn = askopenfilename()
 f = open(fn)
-print(ass.assemble(f.read()))
+print(a.assemble(f.read()))
