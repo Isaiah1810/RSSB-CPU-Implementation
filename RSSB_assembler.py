@@ -4,7 +4,7 @@ tk.Tk().withdraw()
 class RSSB:
     def __init__(self):
         self.instructions = []
-        for i in range(65537):
+        for i in range(65536):
             self.instructions.append("0000")
         self.labels = dict()
         self.current_address = 0
