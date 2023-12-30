@@ -1,29 +1,29 @@
 `default_nettype none
 //11/30/2023-Isaiah Weekes
 
-module URISC
-  (output logic update,
-   input logic clock, reset);
+module URISC();
+  // (output logic update,
+  //  input logic clock, reset);
 
-  logic [7:0] accum_out, accum_in, pc_out, pc_in, addr_out, addr_mux_out;
+  logic [15:0] accum_out, accum_in, pc_out, pc_in, addr_out, addr_mux_out;
   logic accum_en, accum_clear, pc_en, pc_clear, addr_en;
-  logic [7:0] mux_out, mem_out, mem_in, pc_add, pc_mux_out, pc_mux_out2;
+  logic [15:0] mux_out, mem_out, mem_in, pc_add, pc_mux_out, pc_mux_out2;
   logic isNeg, re, we, negVal, addr_sel;
   logic [1:0] data_sel;
-  wire [7:0] bus;
- assign pc_mux_out2 = pc_clear ? 8'd0 : pc_mux_out; 
+  wire [15:0] bus;
+ assign pc_mux_out2 = pc_clear ? 16'd0 : pc_mux_out; 
 //Control Points: accum_en, accum_clear, pc_en, pc_clear, re, we
 //Status Points: isNeg, data_sel
   ControlPath fsm(.accum_en, .accum_clear, .pc_en, .pc_clear, .re, .we, .isNeg,
                   .data_sel, .clock, .reset, .addr_en, .addr_sel);
 //Accumulator
-  Register #(8) ac(.Q(accum_out), .D(accum_in), .en(accum_en), 
+  Register #(16) ac(.Q(accum_out), .D(accum_in), .en(accum_en), 
                     .clear(accum_clear), .clock, .reset);
 //Program Counter
-  Register #(8) pc(.Q(pc_out), .D(pc_mux_out2), .en(pc_en), 
+  Register #(16) pc(.Q(pc_out), .D(pc_mux_out2), .en(pc_en), 
                     .clear(1'b0), .clock, .reset);
 //Temp address register
-  Register #(8) ad(.Q(addr_out), .D(bus), .en(addr_en), .clear(1'b0),
+  Register #(16) ad(.Q(addr_out), .D(bus), .en(addr_en), .clear(1'b0),
                    .clock, .reset);
 //Negative Flag
   Register #(1) neg(.Q(negVal), .D(isNeg), .en(accum_en),.clear(accum_clear),
@@ -33,14 +33,14 @@ module URISC
 //Memory System
   memorySystem mem(.data(bus), .address(addr_mux_out), .we, .re, .clock);
 //Read and write tri-state drivers
-  tridrive #(8) r(.data(bus), .bus(mem_out), .en(re));
-  tridrive #(8) w(.data(accum_out), .bus(bus), .en(we));
+  tridrive #(16) r(.data(bus), .bus(mem_out), .en(re));
+  tridrive #(16) w(.data(accum_out), .bus(bus), .en(we));
 //Selects input for ALU
-  Mux4to1 #(8) aluMux(.Y(mux_out), .I0(pc_out), .I1(accum_out), .I2(16'b0), 
+  Mux4to1 #(16) aluMux(.Y(mux_out), .I0(pc_out), .I1(accum_out), .I2(16'b0), 
                        .I3(mem_out), .S(data_sel));
 //Selects between skipping next instruction or not
-  Mux2to1 #(8) pcmux(.Y(pc_mux_out), .I0(pc_in), .I1(pc_add), .S(negVal));
-  Mux2to1 #(8) addrmux(.Y(addr_mux_out), .I0(pc_out), .I1(addr_out), 
+  Mux2to1 #(16) pcmux(.Y(pc_mux_out), .I0(pc_in), .I1(pc_add), .S(negVal));
+  Mux2to1 #(16) addrmux(.Y(addr_mux_out), .I0(pc_out), .I1(addr_out), 
                        .S(addr_sel));
   always_comb begin
     case(addr_out)
@@ -56,37 +56,37 @@ module URISC
     //Incrementing pc to skip instruction
     pc_add = pc_in + 1;
   end
-
-// //Testbench for simulation
-//   initial begin 
-//     clock = 0;
-//     forever #5 clock = ~clock;
-//   end
-//   integer cycle;
-//   string hoo;
-//   initial begin 
-//     cycle = 0;
-//     hoo = "";
-//     reset = 1;
-//     @(posedge clock)
-//     reset = 0;
-//   end
-//     always @(negedge clock) begin
-//         $display("cycle %d", cycle);
-//         $display(" PC = %h", pc_out);
-//         $display( "Accum = %h", accum_out);
-//         $display(" state = %s", fsm.state.name);
-//         $display("bus = %h", bus);
-//         $display("we %b, re %b", we, re);
-//         $display("data_sel = %d", data_sel);
-//         $display("alu_out = %h", accum_in);
-//         $display("adrr_out %h", addr_out);
-//         $display("isNeg %d", negVal);
-//         $display("==================================================");
-//         cycle = cycle + 1;
-//         if (cycle > 20)
-//           $finish;
-//     end
+logic update, reset, clock;
+//Testbench for simulation
+  initial begin 
+    clock = 0;
+    forever #5 clock = ~clock;
+  end
+  integer cycle;
+  string hoo;
+  initial begin 
+    cycle = 0;
+    hoo = "";
+    reset = 1;
+    @(posedge clock)
+    reset = 0;
+  end
+    always @(negedge clock) begin
+        $display("cycle %d", cycle);
+        $display(" PC = %h", pc_out);
+        $display( "Accum = %h", accum_out);
+        $display(" state = %s", fsm.state.name);
+        $display("bus = %h", bus);
+        $display("we %b, re %b", we, re);
+        $display("data_sel = %d", data_sel);
+        $display("alu_out = %h", accum_in);
+        $display("adrr_out %h", addr_out);
+        $display("isNeg %d", negVal);
+        $display("==================================================");
+        cycle = cycle + 1;
+        if (cycle > 20)
+          $finish;
+    end
 
 endmodule: URISC
 
@@ -135,12 +135,12 @@ module ControlPath
 endmodule: ControlPath
 
 module ALU
-  (output logic [7:0] out,
+  (output logic [15:0] out,
    output logic isNeg, 
-   input logic [7:0] in, accum);
+   input logic [15:0] in, accum);
 
   assign out = in - accum;
-  assign isNeg = out[7];
+  assign isNeg = out[15];
 
 endmodule: ALU
 

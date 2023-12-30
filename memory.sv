@@ -21,12 +21,12 @@ module memory_simulation
   (input logic        clock, enable,
    input logic  we,
    input logic  re,
-   inout wire  [7:0] data,
-   input logic [7:0] address);
+   inout wire  [15:0] data,
+   input logic [15:0] address);
 
-  logic [7:0] mem [8'hff:8'h00];
+  logic [15:0] mem [16'hffff:16'h0000];
 
-  assign data = (enable & (re == 1'b1)) ? mem[address] : 8'bz;
+  assign data = (enable & (re == 1'b1)) ? mem[address] : 16'bz;
 
   always @(posedge clock)
     if (enable & (we == 1'b1))
@@ -45,11 +45,11 @@ module memory_simulation
    */
   initial begin
     int fd, status;
-    logic [7:0] addr;
-    logic [7:0] value;
+    logic [15:0] addr;
+    logic [15:0] value;
     fd = $fopen("memory.hex", "r");
     if (fd) begin
-      addr = 8'h0;
+      addr = 16'h0;
       while (!$feof(fd)) begin
         status = $fscanf(fd,"%h", value);
         if (status == 1) begin
@@ -100,11 +100,11 @@ module memory_synthesis (
     localparam NUM_WORDS = 2**10;
     logic [15:0] mem[0:NUM_WORDS-1] /* synthesis ram_init_file = "memory.mif" */;
 
-    assign data = (enable & (re == 1)) ? mem[address[7:0]] : 8'bz;
+    assign data = (enable & (re == 1)) ? mem[address[15:0]] : 16'bz;
 
     always @(posedge clock)
         if (enable & (we == 1))
-            mem[address[9:0]] <= data;
+            mem[address[15:0]] <= data;
 
 endmodule : memory_synthesis
 
@@ -119,24 +119,24 @@ endmodule : memory_synthesis
 // `include "constants.sv"
 
 module memorySystem (
-   inout  [7:0]   data,
-   input logic [7:0]   address,
+   inout  [15:0]   data,
+   input logic [15:0]   address,
    input logic we,
    input logic re,
    input logic          clock);
 
-`ifdef synthesis
-    // Full sized memory for synthesis, initialized with memory.mif
-    memory_synthesis mem (
-        .clock      (clock),
-        .enable     (1'b1),
-        .we       (we),
-        .re       (re),
-        .data       (data),
-        .address    (address)
-    );
-`else
-    Full sized memory for simulation, initialized with memory.hex
+// `ifdef synthesis
+//     // Full sized memory for synthesis, initialized with memory.mif
+//     memory_synthesis mem (
+//         .clock      (clock),
+//         .enable     (1'b1),
+//         .we       (we),
+//         .re       (re),
+//         .data       (data),
+//         .address    (address)
+//     );
+// `else
+   // Full sized memory for simulation, initialized with memory.hex
     memory_simulation mem (
         .clock      (clock),
         .enable     (1'b1),
