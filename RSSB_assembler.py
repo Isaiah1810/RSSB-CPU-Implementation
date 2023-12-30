@@ -4,28 +4,35 @@ tk.Tk().withdraw()
 class RSSB:
     def __init__(self):
         self.instructions = []
+        for i in range(65537):
+            self.instructions.append("0000")
         self.labels = dict()
+        self.current_address = 0
 
     def assemble(self, source_code):
         #First pass
         lines = source_code.splitlines()
-        current_address = 0
+        self.current_address = 0
         for line in lines:
             line = line.strip()
             #If line isn't empty
-            if line != "" and line[0] != ';' and line.split()[0].lower() != "rssb":
+            if (line != "" and line[0] != ';' and 
+                line.split()[0].lower() != "rssb" and line.split()[0] != ".ORG"):
                 label = line.split()[0]
                 if label in self.labels:
-                    raise ValueError(f"Duplicate label {label} on line {current_address}")
-                self.labels[label] = current_address
-            current_address += 1
+                    raise ValueError(f"Duplicate label {label} on line {self.current_address}")
+                self.labels[label] = self.current_address
+            self.current_address += 1
 
         #Second Pass
+        self.current_address = 0
         for line in lines:
             line = line.strip()
             if line != "" and line[0] != ";":
                 opcode = self.parse_instruction(line)
-                self.instructions.append(opcode)
+                if opcode == "no": continue 
+                self.instructions[self.current_address] = opcode
+            self.current_address += 1
         s = ""
         for inst in self.instructions:
             s += inst
@@ -40,6 +47,9 @@ class RSSB:
         else:
             mnemonic = words[0]
             operand = words[1]
+        if mnemonic == ".ORG":
+            self.current_address = int(operand, 16)
+            return "no"
         if mnemonic.lower() != "rssb":
             raise ValueError("Invalid Instruction. (Hint, use rssb)")
         if operand in self.labels:
@@ -53,4 +63,5 @@ class RSSB:
 a = RSSB()
 fn = askopenfilename()
 f = open(fn)
-print(a.assemble(f.read()))
+nf = open("memory.hex", "w")
+nf.write(a.assemble(f.read()))
