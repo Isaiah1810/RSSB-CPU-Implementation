@@ -5,3 +5,4 @@ A Systemverilog implementation of the One Instruction ISA using Reverse Subtract
 
 Note: Work in progress. Currently works with simulation (using VCS and custom memory.hex file).
       Will be updated to work with synthesis and have an attached module for lcd display output
+Command used for simulation is vcs -sverilog library.sv memory.sv U_RISC.sv
